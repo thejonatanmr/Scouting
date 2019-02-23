@@ -1,6 +1,7 @@
 from adb.client import Client as AdbClient
 import os
 import re
+import base64
 
 DEFAULT_SERVER_IP = "127.0.0.1"
 DEFAULT_SERVER_PORT = 5037
@@ -15,6 +16,7 @@ SCOUTING_FILES_FULL_PATH_FORMAT = "{base_folder}/{export_folder}/{filename}"
 OUTPUT_FOLDER = "Scouting"
 FILE_ID = 0
 FILE_NAME = "x{id}.xlsx"
+PULL_BASE64_FORMAT = "cat {file_path} | base64"
 
 REMOVE_FILE_COMMAND = "rm -r {file_path}"
 
@@ -69,8 +71,10 @@ class FilePuller(object):
             os.mkdir(OUTPUT_FOLDER)
 
         FILE_ID += 1
-        print self.__phone.shell("ls -la "+ file_path)
-        self.__phone.pull(file_path, OUTPUT_FOLDER+"/"+FILE_NAME.format(id=FILE_ID))
+        base_64_file = self.__phone.shell(PULL_BASE64_FORMAT.format(file_path=file_path))
+
+        with open(OUTPUT_FOLDER + "/" + FILE_NAME.format(id=FILE_ID), "wb") as output_file:
+            output_file.write(base64.b64decode(base_64_file))
 
     def cut_all_scouting_files_from_phone(self):
         """
